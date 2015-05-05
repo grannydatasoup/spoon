@@ -1,0 +1,16 @@
+<!-- Nested node template -->
+<script type="text/ng-template" id="accounts_renderer.html">
+  <div ui-tree-handle>
+    {{account.name}}
+  </div>
+  <ol ui-tree-nodes="" ng-model="account.children">
+    <li ng-repeat="account in account.children" ui-tree-node ng-include="'accounts_renderer.html'">
+    </li>
+  </ol>
+</script>
+
+<div ui-tree ng-init='init()'>
+  <ol ui-tree-nodes="" ng-model="accounts" id="tree-root">
+    <li ng-repeat="account in accounts" ui-tree-node ng-include="'accounts_renderer.html'"></li>
+  </ol>
+</div>

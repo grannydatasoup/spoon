@@ -1,12 +1,7 @@
 <div class="text-center">
-  <h1>I need you clothes,</h1> 
-  <h3>your boots and your motocycle</h3>
+  <h1>Use your google account,</h1> 
+  <h3>to manage ad-words accounts</h3>
   <div class="row" ng-show = "me == null && !inProgress && !retry">
-    <button class="btn btn-danger" ng-click = "again()">No way</button>
-    <button class="btn btn-success" ng-click="auth()">Here is my google accaunt</button>
-  </div>
-  <div class="row" ng-show = "me == null && !inProgress && retry">
-    <p>Are you sure?</p>
     <button class="btn btn-success" ng-click="auth()">Here is my google accaunt</button>
   </div>
   <div class="row" ng-show = "me != null && !inProgress">

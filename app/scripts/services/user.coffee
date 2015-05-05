@@ -13,5 +13,18 @@ angular.module('thesoupApp').factory('User', ['$http', '$q', '$log', 'Config', (
 			)
 
 			email.promise
+
+		accounts: () ->
+			accounts = $q.defer()
+			$http.get("#{Config.api}/me/accounts").then(
+				(r) ->
+					accounts.resolve r.data
+				(e) ->
+					$log.error('Unable to load accounts')
+					$log.error(e)
+					accounts.reject e
+			)
+
+			accounts.promise
 	)
 ])
