@@ -1,1 +1,60 @@
+<accordion>
+  <accordion-group ng-repeat = "portfolio in portfolios" heading = "{{portfolio.name}}">
+    <h2>{{portfolio.name}}</h2>
+      <form class="form-inline">
+        <div class="form-group">
+          <label>Revenue per action</label>
+          <input type="text" ng-model="portfolio.settings.RPA">
+        </div>
+        <div class="form-group">
+          <label>Maximum allowed bid</label>
+          <input type="text" ng-model="portfolio.settings.MaxBid">
+        </div>
+        <div class="form-group">
+          <label>Accounts</label>
+          <p class="help-block" ng-hide="portfolio.accounts">Loading accounts linked to this portfolio</p>
+          <p ng-repeat="account in portfolio.accounts">
+            {{account}}
+            <button type="button" class="btn btn-danger" ng-click="removeAccount(portfolio, account)">
+              <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+            </button>
+          </p>
+          <input ng-model="portfolio.accountToAdd" placeholder="Link an account to this portfolio"
+                  typeahead="account for account in accounts" ng-click="addAccount(portfolio)"
+                  >
+        </div>
+        <button type="button" class="btn btn-danger" ng-click="portfolio.$remove()">Remove</button>
+        <button type="button" class="btn btn-success" ng-click="portfolio.$save()">Remove</button>
+      </form>
+  </accordion-group>
+  <accordion-group heading="Create new portfolio" is-open="true">
 
+    <form class="form-inline">
+      <div class="form-group">
+        <label>Portfolio name</label>
+        <input type="text" ng-model="portfolioUnderConstruction.name">
+      </div>
+      <div class="form-group">
+        <label>Revenue per action</label>
+        <input type="text" ng-model="portfolioUnderConstruction.settings.RPA">
+      </div>
+      <div class="form-group">
+        <label>Maximum allowed bid</label>
+        <input type="text" ng-model="portfolioUnderConstruction.settings.MaxBid">
+      </div>
+      <div class="form-group">
+        <label>Accounts</label>
+        <p ng-repeat="account in portfolioUnderConstruction.accounts">
+          {{account}}
+          <button type="button" class="btn btn-danger" ng-click="unstageAccount(account)">
+            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+          </button>
+        </p>
+        <input ng-model="portfolioUnderConstruction.accountToAdd" placeholder="Link an account to this portfolio"
+               typeahead="account for account in accounts" ng-click="stageAccount()"
+                >
+      </div>
+      <button type="button" class="btn btn-success" ng-click="savePortfolio()">Remove</button>
+    </form>
+  </accordion-group>
+</accordion>
