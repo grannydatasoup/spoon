@@ -26,5 +26,17 @@ angular.module('thesoupApp').factory('User', ['$http', '$q', '$log', 'Config', (
 			)
 
 			accounts.promise
+
+		campaigns: () ->
+			campaigns = $q.defer()
+			$http.get("#{Config.api}/me/campaigns").then(
+				(r) ->
+					campaigns.resolve r.data
+				(e) ->
+					$log.error('Unable to load campaigns')
+					$log.error(e)
+					campaigns.reject e
+			)
+			campaigns.promise
 	)
 ])

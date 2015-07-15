@@ -16,6 +16,7 @@ angular.module('thesoupApp').factory(
           ret.promise
 
         save: (portfolioName, accountId) ->
+          $log.debug("Linking #{portfolioName} with #{accountId}")
           $http.post "#{api}/#{portfolioName}/#{accountId}"
 
         remove: (portfolioName, accountId) ->

@@ -11,6 +11,26 @@
           <input type="text" ng-model="portfolio.settings.MaxBid">
         </div>
         <div class="form-group">
+          <label>Campaigns</label>
+          <p ng-repeat="campaign in portfolio.campaigns">
+            {{ campaign | campaignName }}
+
+            <button type="button" class="btn btn-danger" ng-click="stageCampaignRemoval(portfolio, campaign)">
+              <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+            </button>
+          </p>
+          <div class="row">
+            <select ui-select2 ng-model="portfolio.capmaignToAdd" data-placeholder="Pick a campaign">
+              <option value=""></option>
+              <option ng-repeat="campaign in campaigns" value="{{campaign.id}}">{{campaign.name}}</option>
+            </select>
+            <button type="button" class="btn btn-success" ng-click="stageCampaign(portfolio)">
+              <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+            </button>
+          </div>
+
+        </div>
+        <div class="form-group">
           <label>Accounts</label>
           <p class="help-block" ng-hide="portfolio.accounts">Loading accounts linked to this portfolio</p>
           <p ng-repeat="account in portfolio.accounts">
@@ -19,9 +39,20 @@
               <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
             </button>
           </p>
-          <input ng-model="portfolio.accountToAdd" placeholder="Link an account to this portfolio"
-                  typeahead="account for account in accounts" ng-click="addAccount(portfolio)"
-                  >
+          <div class="row" ng-hide="!accounts || accountsError">
+            <select ui-select2 ng-model="portfolio.accountToAdd" data-placeholder="Pick an account">
+              <option value=""></option>
+              <option ng-repeat="account in accounts" value="{{account}}">{{account}}</option>
+            </select>
+            <button type="button" class="btn btn-success" ng-click="addAccount(portfolio)">
+              <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+            </button>
+          </div>
+          <div class="row" ng-show="!accounts && ! accountsError">
+            <p class="help-block">
+              Loading accounts...
+            </p>
+          </div>
         </div>
         <button type="button" class="btn btn-danger" ng-click="portfolio.$remove()">Remove</button>
         <button type="button" class="btn btn-success" ng-click="portfolio.$save()">Remove</button>

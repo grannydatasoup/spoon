@@ -1,5 +1,5 @@
 angular.module 'thesoupApp'
-  .controller 'PortfolioCtrl', ($scope, $log, $resource, PortfolioAccount, User, Config) ->
+  .controller 'PortfolioCtrl', ($scope, $log, $resource, $q, PortfolioAccount, User, Config) ->
 
     emptyPortfolio = () ->
       name: "Default portfolio",
@@ -29,6 +29,10 @@ angular.module 'thesoupApp'
           reloadAccounts(p)
         )
 
+      User.campaigns().then(
+        (c) ->
+          $scope.campaigns = c
+      )
 
       User.accounts().then(
         (acc) ->
@@ -61,10 +65,28 @@ angular.module 'thesoupApp'
     $scope.removeAccount = (portfolio, account) ->
       PortfolioAccount.remove(portfolio.name, account)
 
+    $scope.stageCampaignRemoval = (portfolio, campaign) ->
+      portfolio.campaigns = _.without(portfolio.campaigns, campaign)
+
+    $scope.stageCampaign = (portfolio) ->
+      if portfolio.capmaignToAdd?
+        portfolio.campaigns.push(portfolio.capmaignToAdd)
+      portfolio.capmaignToAdd = null
+
+
     $scope.savePortfolio = () ->
       new Portfolio($scope.portfolioUnderConstruction).$save(() ->
-        $scope.portfolios.push($scope.portfolioUnderConstruction)
-        $scope.portfolioUnderConstruction = emptyPortfolio()
+        $q.all(
+          _.map(
+            _.each(
+              $scope.portfolioUnderConstruction.accounts,
+              (a) ->
+                PortfolioAccount.save($scope.portfolioUnderConstruction.name, a)
+            )
+          )
+        ).then () ->
+          $scope.portfolios.push($scope.portfolioUnderConstruction)
+          $scope.portfolioUnderConstruction = emptyPortfolio()
       )
 
 
