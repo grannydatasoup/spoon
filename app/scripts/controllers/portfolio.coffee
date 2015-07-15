@@ -12,22 +12,17 @@ angular.module 'thesoupApp'
 
     Portfolio = $resource("#{Config.api}/portfolio/:portfolioName", portfolioName: '@name')
 
-    reloadAccounts(portfolio) ->
+    reloadAccounts = (portfolio) ->
       PortfolioAccount.query(portfolio.name).then(
-        (a) -> portfolio.accounts = a
+        (customerIds) ->
+          portfolio.accounts = _customerIds
       )
 
     notifyOnError = (message) ->
       $log.warn(message)
 
-    $scope.init() ->
+    $scope.init = () ->
       $scope.portfolios = Portfolio.query()
-
-      $scope.portfolios.$promise.then () ->
-        _.each($scope.portfolios, (p) ->
-          p.accounts = null
-          reloadAccounts(p)
-        )
 
       User.campaigns().then(
         (c) ->
@@ -37,9 +32,14 @@ angular.module 'thesoupApp'
       User.accounts().then(
         (acc) ->
           $log.debug("Got user accounts")
-          $log.debug(acc)
-          $scope.accounts = acc
+          $log.debug(acc.entries)
+          $scope.accounts = acc.entries
           $scope.accountsError = false
+          $scope.portfolios.$promise.then () ->
+            _.each($scope.portfolios, (p) ->
+              p.accounts = null
+              reloadAccounts(p)
+            )
         () ->
           $scope.accountsError = true
       )
@@ -48,12 +48,14 @@ angular.module 'thesoupApp'
     $scope.addAccount = (portfolio) ->
       PortfolioAccount.save(portfolio.name, portfolio.accountToAdd).then(
         () ->
-          reloadAccounts()
+          reloadAccounts(portfolio)
         () ->
           notifyOnError('Was unable to add portfolio account')
       )
 
     $scope.stageAccount = () ->
+      $log.debug("Account staged to be link to new portfolio")
+      $log.debug($scope.portfolioUnderConstruction.accountToAdd)
       $scope.portfolioUnderConstruction.accounts.push($scope.portfolioUnderConstruction.accountToAdd)
 
     $scope.unstageAccount = (account) ->

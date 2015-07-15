@@ -409,11 +409,23 @@ module.exports = function (grunt) {
           dest: '<%= yeoman.dist %>'
         }]
       },
+      scripts: {
+        expand: true,
+        dest: '<%= yeoman.dist %>/scripts',
+        cwd: '.tmp/scripts/',
+        src: '{,*/}*.js'
+      },
       styles: {
         expand: true,
-        cwd: '<%= yeoman.app %>/styles',
-        dest: '.tmp/styles/',
+        dest: '<%= yeoman.dist %>/styles',
+        cwd: '.tmp/styles/',
         src: '{,*/}*.css'
+      },
+      bower: {
+        expand: true,
+        cwd: './bower_components',
+        src: './**',
+        dest: '<%= yeoman.dist %>/bower_components'
       }
     },
 
@@ -489,6 +501,16 @@ module.exports = function (grunt) {
     'filerev',
     'usemin',
     'htmlmin'
+  ]);
+
+  grunt.registerTask('builddev', [
+    'clean:dist',
+    'wiredep',
+    'concurrent:dist',
+    'copy:dist',
+    'copy:scripts',
+    'copy:styles',
+    'copy:bower'
   ]);
 
   grunt.registerTask('default', [

@@ -1,3 +1,3 @@
 angular.module('thesoupApp').factory('Config', [() ->
-	(api: 'http://gaw-bidding.appspot.com')
+	(api: 'http://localhost:8080')
 ])

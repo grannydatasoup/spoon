@@ -6,8 +6,9 @@ angular.module('thesoupApp').filter('campaignName', (User, $log) ->
     campaigns = c
 
   (input) ->
+
     if campaigns?
-      campaign = _.find(campaigns, (c) -> c.id is input)
+      campaign = _.find(campaigns, (c) -> c.id.toString() is input)
 
       if campaign?
         campaign.name

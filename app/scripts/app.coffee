@@ -12,6 +12,7 @@ angular
   .module 'thesoupApp', [
     'ngRoute',
     'ngSanitize',
+    'ngResource',
     'ui.tree',
     'ui.bootstrap',
     'ui.select2'
