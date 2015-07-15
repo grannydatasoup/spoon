@@ -7,7 +7,7 @@ angular.module('thesoupApp').factory(
       (
         query: (portfolioName) ->
           ret = $q.defer()
-          $http.get "#{api}/#{portfolioName}"
+          $http.get "#{api}/portfolio/#{portfolioName}/accounts"
             .success (data) ->
               ret.resolve data
             .error () ->
@@ -17,10 +17,10 @@ angular.module('thesoupApp').factory(
 
         save: (portfolioName, accountId) ->
           $log.debug("Linking #{portfolioName} with #{accountId}")
-          $http.post "#{api}/#{portfolioName}/#{accountId}"
+          $http.post "#{api}/portfolio/#{portfolioName}/accounts/#{accountId}"
 
         remove: (portfolioName, accountId) ->
-          $http.delete "#{api}/#{portfolioName}/#{accountId}"
+          $http.delete "#{api}/portfolio/#{portfolioName}/accounts/#{accountId}"
       )
   ]
 )

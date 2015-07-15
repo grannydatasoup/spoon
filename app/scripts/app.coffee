@@ -15,7 +15,8 @@ angular
     'ngResource',
     'ui.tree',
     'ui.bootstrap',
-    'ui.select2'
+    'ui.select2',
+    'xeditable'
   ]
   .config ($routeProvider) ->
     $routeProvider
@@ -30,4 +31,7 @@ angular
         controller: 'PortfolioCtrl'
       .otherwise
         redirectTo: '/'
+  .run (editableOptions, editableThemes) ->
+    editableOptions.theme = 'bs3'
+    editableThemes.bs3.buttonsClass = 'btn-sm';
 

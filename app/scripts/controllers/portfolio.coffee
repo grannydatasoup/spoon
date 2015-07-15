@@ -12,11 +12,26 @@ angular.module 'thesoupApp'
 
     Portfolio = $resource("#{Config.api}/portfolio/:portfolioName", portfolioName: '@name')
 
-    reloadAccounts = (portfolio) ->
-      PortfolioAccount.query(portfolio.name).then(
-        (customerIds) ->
-          portfolio.accounts = _customerIds
+    reloadPortfolios = () ->
+      $scope.portfolios = Portfolio.query()
+      $scope.portfolios.$promise.then(
+        () ->
+          reloadAccounts()
       )
+
+    reloadAccounts = (portfolio) ->
+      if portfolio?
+        PortfolioAccount.query(portfolio.name).then(
+          (customerIds) ->
+            portfolio.accounts = customerIds
+        )
+      else
+        $scope.portfolios.$promise.then () ->
+          _.each($scope.portfolios, (p) ->
+            p.accounts = null
+            reloadAccounts(p)
+          )
+
 
     notifyOnError = (message) ->
       $log.warn(message)
@@ -64,8 +79,45 @@ angular.module 'thesoupApp'
         account
       )
 
+    $scope.removePortfolio = (portfolio) ->
+      portfolio.$remove().then(
+        () ->
+          reloadPortfolios()
+      )
+
+    $scope.updatePortfolio = (portfolio) ->
+      if portfolio.newName?
+        wait = $q.defer()
+
+        updated = new Portfolio(name: portfolio.newName, settings: portfolio.settings)
+
+        PortfolioAccount.query(portfolio.name).then(
+          (accounts) ->
+            portfolio.$remove().then(
+              updated.$save().then(
+                () ->
+                  $q.all(_.map(accounts, (a) -> PortfolioAccount.save(updated.name, a))).then(
+                    () ->
+                      wait.resolve()
+                  )
+              )
+            )
+        )
+
+        p = wait.promise
+      else
+        p = portfolio.$save()
+
+      p.then(
+        () ->
+          reloadPortfolios()
+      )
+
     $scope.removeAccount = (portfolio, account) ->
-      PortfolioAccount.remove(portfolio.name, account)
+      PortfolioAccount.remove(portfolio.name, account).then(
+        () ->
+          reloadAccounts(portfolio)
+      )
 
     $scope.stageCampaignRemoval = (portfolio, campaign) ->
       portfolio.campaigns = _.without(portfolio.campaigns, campaign)
@@ -87,7 +139,7 @@ angular.module 'thesoupApp'
             )
           )
         ).then () ->
-          $scope.portfolios.push($scope.portfolioUnderConstruction)
+          reloadPortfolios()
           $scope.portfolioUnderConstruction = emptyPortfolio()
       )
 

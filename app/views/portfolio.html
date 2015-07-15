@@ -1,6 +1,6 @@
 <accordion ng-init = "init()">
   <accordion-group ng-repeat = "portfolio in portfolios" heading = "{{portfolio.name}}">
-    <h2>{{portfolio.name}}</h2>
+    <h2 editable-text="portfolio.newName">{{portfolio.newName || portfolio.name}}</h2>
       <form>
         <div class="form-group">
           <label>Revenue per action</label>
@@ -15,16 +15,16 @@
           <p ng-repeat="campaign in portfolio.campaigns">
             {{ campaign | campaignName }}
 
-            <button type="button" class="btn btn-danger" ng-click="stageCampaignRemoval(portfolio, campaign)">
+            <button type="button" class="btn btn-sm btn-default" ng-click="stageCampaignRemoval(portfolio, campaign)">
               <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
             </button>
           </p>
           <div class="row select-wrapper">
-            <select ui-select2 ng-model="portfolio.capmaignToAdd" data-placeholder="Pick a campaign">
+            <select  class="select" ui-select2 ng-model="portfolio.capmaignToAdd" data-placeholder="Pick a campaign">
               <option value=""></option>
               <option ng-repeat="campaign in campaigns" value="{{campaign.id}}">{{campaign.name}}</option>
             </select>
-            <button type="button" class="btn btn-success btn-sm select-action" ng-click="stageCampaign(portfolio)">
+            <button type="button" class="btn btn-primary btn-sm select-action" ng-click="stageCampaign(portfolio)">
               <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
             </button>
           </div>
@@ -39,7 +39,7 @@
             </button>
           </p>
           <div class="row select-wrapper" ng-hide="!accounts || accountsError">
-            <select ui-select2 ng-model="portfolio.accountToAdd" data-placeholder="Pick an account">
+            <select class="select" ui-select2 ng-model="portfolio.accountToAdd" data-placeholder="Pick an account">
               <option value=""></option>
               <option ng-repeat="account in accounts" value="{{account.customerId}}">{{account.name}}</option>
             </select>
@@ -53,8 +53,8 @@
             </p>
           </div>
         </div>
-        <button type="button" class="btn btn-danger" ng-click="portfolio.$remove()">Remove</button>
-        <button type="button" class="btn btn-success" ng-click="portfolio.$save()">Save</button>
+        <button type="button" class="btn btn-danger" ng-click="removePortfolio(portfolio)">Remove</button>
+        <button type="button" class="btn btn-success" ng-click="updatePortfolio(portfolio)">Save</button>
       </form>
   </accordion-group>
   <accordion-group heading="Create new portfolio" is-open="true">
@@ -77,7 +77,7 @@
         <p ng-repeat="campaign in portfolioUnderConstruction.campaigns">
           {{ campaign | campaignName }}
 
-          <button type="button" class="btn btn-danger btn-sm" ng-click="stageCampaignRemoval(portfolioUnderConstruction, campaign)">
+          <button type="button" class="btn btn-default btn-sm" ng-click="stageCampaignRemoval(portfolioUnderConstruction, campaign)">
             <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
           </button>
         </p>
@@ -86,7 +86,7 @@
             <option value=""></option>
             <option ng-repeat="campaign in campaigns" value="{{campaign.id}}">{{campaign.name}}</option>
           </select>
-          <button type="button" class="btn btn-success btn-sm select-action" ng-click="stageCampaign(portfolioUnderConstruction)">
+          <button type="button" class="btn btn-primary btn-sm select-action" ng-click="stageCampaign(portfolioUnderConstruction)">
             <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
           </button>
         </div>
@@ -96,7 +96,7 @@
         <p class="help-block" ng-hide="portfolioUnderConstruction.accounts">Loading accounts linked to this portfolio</p>
         <p ng-repeat="account in portfolioUnderConstruction.accounts">
           {{account | accountName: accounts}}
-          <button type="button" class="btn btn-danger btn-sm" ng-click="unstageAccount(account)">
+          <button type="button" class="btn btn-default btn-sm" ng-click="unstageAccount(account)">
             <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
           </button>
         </p>
@@ -105,7 +105,7 @@
             <option value=""></option>
             <option ng-repeat="account in accounts" value="{{account.customerId}}">{{account.name}}</option>
           </select>
-          <button type="button" class="btn btn-success btn-sm select-action" ng-click="stageAccount()">
+          <button type="button" class="btn btn-primary btn-sm select-action" ng-click="stageAccount()">
             <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
           </button>
         </div>
