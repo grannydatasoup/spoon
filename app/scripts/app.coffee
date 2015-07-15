@@ -12,7 +12,9 @@ angular
   .module 'thesoupApp', [
     'ngRoute',
     'ngSanitize',
-    'ui.tree'
+    'ui.tree',
+    'ui.bootstrap',
+    'ui.select2'
   ]
   .config ($routeProvider) ->
     $routeProvider
