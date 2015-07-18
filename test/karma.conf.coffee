@@ -29,6 +29,8 @@ module.exports = (config) ->
       'bower_components/angular-ui-select2/src/select2.js'
       'bower_components/angular-bootstrap/ui-bootstrap-tpls.js'
       'bower_components/angular-xeditable/dist/js/xeditable.js'
+      'bower_components/angular-loading-bar/build/loading-bar.js'
+      'bower_components/angular-flash-alert/dist/angular-flash.js'
       'bower_components/angular-mocks/angular-mocks.js'
       # endbower
       # bower:coffee

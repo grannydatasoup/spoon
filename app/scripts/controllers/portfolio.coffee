@@ -1,5 +1,5 @@
 angular.module 'thesoupApp'
-  .controller 'PortfolioCtrl', ($scope, $log, $resource, $q, PortfolioAccount, User, Config) ->
+  .controller 'PortfolioCtrl', ($scope, $log, $resource, $q, PortfolioAccount, User, Config, Flash) ->
 
     emptyPortfolio = () ->
       name: "Default portfolio",
@@ -10,6 +10,8 @@ angular.module 'thesoupApp'
       ),
       accounts: []
 
+    $scope.accountsError = false
+
     Portfolio = $resource("#{Config.api}/portfolio/:portfolioName", portfolioName: '@name')
 
     reloadPortfolios = () ->
@@ -17,6 +19,8 @@ angular.module 'thesoupApp'
       $scope.portfolios.$promise.then(
         () ->
           reloadAccounts()
+        () ->
+          Flash.create('danger', 'Was unable to load portfolio, try again later')
       )
 
     reloadAccounts = (portfolio) ->
@@ -24,6 +28,8 @@ angular.module 'thesoupApp'
         PortfolioAccount.query(portfolio.name).then(
           (customerIds) ->
             portfolio.accounts = customerIds
+          () ->
+            Flash.create('danger', "Was unable to load accounts linked to portfolio '#{portfolio.name}'")
         )
       else
         $scope.portfolios.$promise.then () ->
@@ -32,16 +38,14 @@ angular.module 'thesoupApp'
             reloadAccounts(p)
           )
 
-
-    notifyOnError = (message) ->
-      $log.warn(message)
-
     $scope.init = () ->
       $scope.portfolios = Portfolio.query()
 
       User.campaigns().then(
         (c) ->
           $scope.campaigns = c
+        () ->
+          Flash.create('danger', 'Was unable to load campaigns')
       )
 
       User.accounts().then(
@@ -56,6 +60,7 @@ angular.module 'thesoupApp'
               reloadAccounts(p)
             )
         () ->
+          Flash.create('danger', 'Was unable to load accounts, try reload page')
           $scope.accountsError = true
       )
       $scope.portfolioUnderConstruction = emptyPortfolio()
@@ -65,7 +70,7 @@ angular.module 'thesoupApp'
         () ->
           reloadAccounts(portfolio)
         () ->
-          notifyOnError('Was unable to add portfolio account')
+          Flash.create('danger', "Was unable to add account '#{portfolio.accountToAdd}' to portfolio '#{portfolio.name}'")
       )
 
     $scope.stageAccount = () ->
@@ -83,6 +88,8 @@ angular.module 'thesoupApp'
       portfolio.$remove().then(
         () ->
           reloadPortfolios()
+        () ->
+          Flash.create('danger', "Was unable to remove portfolio '#{portfolio.name}'")
       )
 
     $scope.updatePortfolio = (portfolio) ->
@@ -99,9 +106,17 @@ angular.module 'thesoupApp'
                   $q.all(_.map(accounts, (a) -> PortfolioAccount.save(updated.name, a))).then(
                     () ->
                       wait.resolve()
+                    () ->
+                      wait.reject()
                   )
+                () ->
+                  wait.reject()
               )
+              () ->
+                wait.reject()
             )
+          () ->
+            wait.reject()
         )
 
         p = wait.promise
@@ -111,12 +126,16 @@ angular.module 'thesoupApp'
       p.then(
         () ->
           reloadPortfolios()
+        () ->
+          Flash.create('danger', "Was unable to update portfolio '#{portfolio.name}'")
       )
 
     $scope.removeAccount = (portfolio, account) ->
       PortfolioAccount.remove(portfolio.name, account).then(
         () ->
           reloadAccounts(portfolio)
+        () ->
+          Flash.create('danger', "Was unable to unlink account '#{account}' from portfolio #{portfolio.name}")
       )
 
     $scope.stageCampaignRemoval = (portfolio, campaign) ->
@@ -138,9 +157,13 @@ angular.module 'thesoupApp'
                 PortfolioAccount.save($scope.portfolioUnderConstruction.name, a)
             )
           )
-        ).then () ->
-          reloadPortfolios()
-          $scope.portfolioUnderConstruction = emptyPortfolio()
+        ).then(
+          () ->
+            reloadPortfolios()
+            $scope.portfolioUnderConstruction = emptyPortfolio()
+          () ->
+            Flash.create('danger', "Was unable to create new portfolio")
+        )
       )
 
 

@@ -47,7 +47,7 @@
               <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
             </button>
           </div>
-          <div class="row" ng-show="!accounts">
+          <div class="row" ng-show="!accounts && !accountsError">
             <p class="help-block">
               Loading accounts...
             </p>
@@ -109,7 +109,7 @@
             <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
           </button>
         </div>
-        <div class="row" ng-show="!accounts">
+        <div class="row" ng-show="!accounts  && !accountsError">
           <p class="help-block">
             Loading accounts...
           </p>

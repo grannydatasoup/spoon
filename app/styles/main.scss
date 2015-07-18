@@ -109,3 +109,10 @@ body {
 p {
   margin-left: 10px;
 }
+
+.flash-message {
+  position: fixed;
+  top: 5px;
+  width: 80%;
+  left: 10%;
+}

@@ -16,7 +16,9 @@ angular
     'ui.tree',
     'ui.bootstrap',
     'ui.select2',
-    'xeditable'
+    'xeditable',
+    'angular-loading-bar',
+    'flash'
   ]
   .config ($routeProvider) ->
     $routeProvider
