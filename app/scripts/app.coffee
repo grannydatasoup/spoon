@@ -18,7 +18,8 @@ angular
     'ui.select2',
     'xeditable',
     'angular-loading-bar',
-    'flash'
+    'flash',
+    'ngTable'
   ]
   .config ($routeProvider) ->
     $routeProvider

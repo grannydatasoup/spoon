@@ -31,6 +31,7 @@ module.exports = (config) ->
       'bower_components/angular-xeditable/dist/js/xeditable.js'
       'bower_components/angular-loading-bar/build/loading-bar.js'
       'bower_components/angular-flash-alert/dist/angular-flash.js'
+      'bower_components/ng-table/dist/ng-table.min.js'
       'bower_components/angular-mocks/angular-mocks.js'
       # endbower
       # bower:coffee

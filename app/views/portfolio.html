@@ -1,3 +1,5 @@
+<div class="col-md-1"></div>
+<div class="col-md-10">
 <accordion ng-init = "init()">
   <accordion-group ng-repeat = "portfolio in portfolios" heading = "{{portfolio.name}}">
     <h2 editable-text="portfolio.newName">{{portfolio.newName || portfolio.name}}</h2>
@@ -12,47 +14,27 @@
         </div>
         <div class="form-group">
           <label>Campaigns</label>
-          <p ng-repeat="campaign in portfolio.campaigns">
-            {{ campaign | campaignName }}
+          <div class="row table-wrapper">
+            <table class="table ng-table-responsive" ng-table="tableParams" show-filter='true'>
+              <tr ng-repeat="campaign in $data">
+                <td data-title="'Id'">{{campaign.id}}</td>
+                <td data-title="'Name'" filter="{ 'name': 'text' }">{{campaign.name}}</td>
+                <td data-title="'Account'"
+                  filter="{ 'account_id' : 'select' }"
+                  filter-data="accounts"
+                >{{campaign.account.name}}</td>
+                <td data-title="'Status'"
+                  filter="{ 'status': 'select' }"
+                  filter-data="statuses"
+                >{{campaign.status}}</td>
+                <td header="'ng-table/headers/checkbox.html'">
+                  <input type="checkbox" ng-model="portfolio.campaigns[campaign.id]"/>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
 
-            <button type="button" class="btn btn-sm btn-default" ng-click="stageCampaignRemoval(portfolio, campaign)">
-              <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
-            </button>
-          </p>
-          <div class="row select-wrapper">
-            <select  class="select" ui-select2 ng-model="portfolio.capmaignToAdd" data-placeholder="Pick a campaign">
-              <option value=""></option>
-              <option ng-repeat="campaign in campaigns" value="{{campaign.id}}">{{campaign.name}}</option>
-            </select>
-            <button type="button" class="btn btn-primary btn-sm select-action" ng-click="stageCampaign(portfolio)">
-              <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
-            </button>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Accounts</label>
-          <p class="help-block" ng-hide="portfolio.accounts">Loading accounts linked to this portfolio</p>
-          <p ng-repeat="account in portfolio.accounts">
-            {{account | accountName: accounts}}
-            <button type="button" class="btn btn-danger btn-sm" ng-click="removeAccount(portfolio, account)">
-              <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
-            </button>
-          </p>
-          <div class="row select-wrapper" ng-hide="!accounts || accountsError">
-            <select class="select" ui-select2 ng-model="portfolio.accountToAdd" data-placeholder="Pick an account">
-              <option value=""></option>
-              <option ng-repeat="account in accounts" value="{{account.customerId}}">{{account.name}}</option>
-            </select>
-            <button type="button" class="btn btn-success btn-sm select-action" ng-click="addAccount(portfolio)">
-              <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
-            </button>
-          </div>
-          <div class="row" ng-show="!accounts && !accountsError">
-            <p class="help-block">
-              Loading accounts...
-            </p>
-          </div>
-        </div>
         <button type="button" class="btn btn-danger" ng-click="removePortfolio(portfolio)">Remove</button>
         <button type="button" class="btn btn-success" ng-click="updatePortfolio(portfolio)">Save</button>
       </form>
@@ -81,41 +63,35 @@
             <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
           </button>
         </p>
-        <div class="row select-wrapper">
-          <select class="select" ui-select2 ng-model="portfolioUnderConstruction.capmaignToAdd" data-placeholder="Pick a campaign">
-            <option value=""></option>
-            <option ng-repeat="campaign in campaigns" value="{{campaign.id}}">{{campaign.name}}</option>
-          </select>
-          <button type="button" class="btn btn-primary btn-sm select-action" ng-click="stageCampaign(portfolioUnderConstruction)">
-            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
-          </button>
+        <div class="row table-wrapper">
+          <table class="table">
+            <tr>
+              <th>Id</th>
+              <th>Name</th>
+              <th>Account</th>
+              <th>Status</th>
+              <th>DataSoup managed?</th>
+            </tr>
+            <tr ng-repeat="campaign in campaigns">
+              <td>{{campaign.id}}</td>
+              <td>{{campaign.name}}</td>
+              <td>{{campaign.account.name}} ({{campaign.account.id}})</td>
+              <td>{{campaign.status}}</td>
+              <td>
+                <input type="checkbox" ng-model="campaign.managed"/>
+              </td>
+            </tr>
+          </table>
         </div>
       </div>
-      <div class="form-group">
-        <label>Accounts</label>
-        <p class="help-block" ng-hide="portfolioUnderConstruction.accounts">Loading accounts linked to this portfolio</p>
-        <p ng-repeat="account in portfolioUnderConstruction.accounts">
-          {{account | accountName: accounts}}
-          <button type="button" class="btn btn-default btn-sm" ng-click="unstageAccount(account)">
-            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
-          </button>
-        </p>
-        <div class="row select-wrapper" ng-hide="!accounts || accountsError">
-          <select class="select" ui-select2 ng-model="portfolioUnderConstruction.accountToAdd" data-placeholder="Pick an account">
-            <option value=""></option>
-            <option ng-repeat="account in accounts" value="{{account.customerId}}">{{account.name}}</option>
-          </select>
-          <button type="button" class="btn btn-primary btn-sm select-action" ng-click="stageAccount()">
-            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
-          </button>
-        </div>
-        <div class="row" ng-show="!accounts  && !accountsError">
-          <p class="help-block">
-            Loading accounts...
-          </p>
-        </div>
-      </div>
+
       <button type="button" class="btn btn-success" ng-click="savePortfolio()">Save</button>
     </form>
   </accordion-group>
 </accordion>
+</div>
+<div class="col-md-1"></div>
+<script type="text/ng-template" id="ng-table/headers/checkbox.html">
+        <label>Managed by Granny</label>
+        <input type="checkbox" ng-model="select_all" id="select_all" name="filter-checkbox" value="" />
+</script>

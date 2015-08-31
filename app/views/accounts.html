@@ -8,9 +8,10 @@
     </li>
   </ol>
 </script>
-
-<div ui-tree ng-init='init()'>
-  <ol ui-tree-nodes="" ng-model="accounts" id="tree-root">
-    <li ng-repeat="account in accounts" ui-tree-node ng-include="'accounts_renderer.html'"></li>
-  </ol>
+<div class="container">
+  <div ui-tree ng-init='init()'>
+    <ol ui-tree-nodes="" ng-model="accounts" id="tree-root">
+      <li ng-repeat="account in accounts" ui-tree-node ng-include="'accounts_renderer.html'"></li>
+    </ol>
+  </div>
 </div>

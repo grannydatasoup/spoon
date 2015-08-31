@@ -1,5 +1,6 @@
 angular.module 'thesoupApp'
-  .controller 'PortfolioCtrl', ($scope, $log, $resource, $q, PortfolioAccount, User, Config, Flash) ->
+  .controller 'PortfolioCtrl', ($scope, $log, $resource, $q, PortfolioCampaign,
+    User, Config, Flash, $filter, ngTableParams) ->
 
     emptyPortfolio = () ->
       name: "Default portfolio",
@@ -11,6 +12,12 @@ angular.module 'thesoupApp'
       accounts: []
 
     $scope.accountsError = false
+    $scope.statuses = [
+      (id:"UNKNOWN", title: "UNKNOWN"),
+      (id: "ENABLED", title: "ENABLED"),
+      (id: "PAUSED", title: "PAUSED"),
+      (id: "REMOVED", title: "REMOVED")
+    ]
 
     Portfolio = $resource("#{Config.api}/portfolio/:portfolioName", portfolioName: '@name')
 
@@ -18,71 +25,84 @@ angular.module 'thesoupApp'
       $scope.portfolios = Portfolio.query()
       $scope.portfolios.$promise.then(
         () ->
-          reloadAccounts()
+          reloadCampaigns()
         () ->
           Flash.create('danger', 'Was unable to load portfolio, try again later')
       )
 
-    reloadAccounts = (portfolio) ->
+    reloadCampaigns = (portfolio) ->
       if portfolio?
-        PortfolioAccount.query(portfolio.name).then(
-          (customerIds) ->
-            portfolio.accounts = customerIds
+        PortfolioCampaign.query(portfolio.name).then(
+          (campaigns) ->
+            portfolio.campaigns = _.object(
+              _.map(campaigns, (c) -> c.id),
+              _.map(campaigns, true)
+            )
           () ->
-            Flash.create('danger', "Was unable to load accounts linked to portfolio '#{portfolio.name}'")
+            Flash.create('danger', "Was unable to load campaigns linked to portfolio '#{portfolio.name}'")
         )
       else
         $scope.portfolios.$promise.then () ->
           _.each($scope.portfolios, (p) ->
-            p.accounts = null
-            reloadAccounts(p)
+            p.campaigns = null
+            reloadCampaigns(p)
           )
+
+
+    campaings_promise = User.campaigns()
+
+    $scope.tableParams = new ngTableParams({
+        filter: {
+          status: "ENABLED"
+        },
+        page: 1,
+        count: 100
+      }, {
+      getData: ($defer, params) ->
+        campaings_promise.then(
+          (c) ->
+            orderedData = $filter('filter')(c, params.filter()) if params.filter()
+            orderedData = c unless params.filter();
+
+            $defer.resolve orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count())
+            params.total(orderedData.length);
+          () ->
+            $defer.reject()
+        )
+
+        $defer.promise
+    })
+
+    $scope.accounts = $q.defer()
 
     $scope.init = () ->
       $scope.portfolios = Portfolio.query()
 
-      User.campaigns().then(
+      campaings_promise.then(
         (c) ->
-          $scope.campaigns = c
+          $scope.campaigns = _.map(c, (cc) ->
+            ccc = cc
+            ccc['account_id'] = cc.account.id
+            ccc
+          )
+          accounts = []
+          _.each($scope.campaigns, (c) ->
+            a = (id: c.account.id, title: c.account.name)
+            if _.indexOf(accounts, a) is -1
+              accounts.push(a)
+          )
+          $scope.accounts.resolve accounts
+
         () ->
           Flash.create('danger', 'Was unable to load campaigns')
       )
 
-      User.accounts().then(
-        (acc) ->
-          $log.debug("Got user accounts")
-          $log.debug(acc.entries)
-          $scope.accounts = acc.entries
-          $scope.accountsError = false
-          $scope.portfolios.$promise.then () ->
-            _.each($scope.portfolios, (p) ->
-              p.accounts = null
-              reloadAccounts(p)
-            )
+      $q.all((campaigns: campaings_promise, portfolios: $scope.portfolios.$promise)).then(
         () ->
-          Flash.create('danger', 'Was unable to load accounts, try reload page')
-          $scope.accountsError = true
+          reloadCampaigns()
       )
+
       $scope.portfolioUnderConstruction = emptyPortfolio()
-
-    $scope.addAccount = (portfolio) ->
-      PortfolioAccount.save(portfolio.name, portfolio.accountToAdd).then(
-        () ->
-          reloadAccounts(portfolio)
-        () ->
-          Flash.create('danger', "Was unable to add account '#{portfolio.accountToAdd}' to portfolio '#{portfolio.name}'")
-      )
-
-    $scope.stageAccount = () ->
-      $log.debug("Account staged to be link to new portfolio")
-      $log.debug($scope.portfolioUnderConstruction.accountToAdd)
-      $scope.portfolioUnderConstruction.accounts.push($scope.portfolioUnderConstruction.accountToAdd)
-
-    $scope.unstageAccount = (account) ->
-      $scope.portfolioUnderConstruction.accounts = _.without(
-        $scope.portfolioUnderConstruction.accounts,
-        account
-      )
 
     $scope.removePortfolio = (portfolio) ->
       portfolio.$remove().then(
@@ -93,71 +113,66 @@ angular.module 'thesoupApp'
       )
 
     $scope.updatePortfolio = (portfolio) ->
-      if portfolio.newName?
-        wait = $q.defer()
 
-        updated = new Portfolio(name: portfolio.newName, settings: portfolio.settings)
+      campaignsUpdate = $q.defer()
 
-        PortfolioAccount.query(portfolio.name).then(
-          (accounts) ->
-            portfolio.$remove().then(
-              updated.$save().then(
-                () ->
-                  $q.all(_.map(accounts, (a) -> PortfolioAccount.save(updated.name, a))).then(
+      if portfolio.campaignsToRemove? and portfolio.campaignsToRemove.length > 0
+        PortfolioCampaign.remove(portfolio.name, portfolio.campaignsToRemove).then(
+          () ->
+            campaignsUpdate.resolve()
+          () ->
+            campaignsUpdate.reject()
+        )
+      else
+        campaignsUpdate.resolve()
+
+      campaignsUpdate.then(
+        () ->
+          if portfolio.newName?
+            wait = $q.defer()
+
+            updated = new Portfolio(name: portfolio.newName, settings: portfolio.settings)
+
+            PortfolioCampaign.query(portfolio.name).then(
+              (campaigns) ->
+                portfolio.$remove().then(
+                  updated.$save().then(
                     () ->
-                      wait.resolve()
+                      PortfolioCampaign.save(updated.name, campaigns).then(
+                        () ->
+                          wait.resolve()
+                        () ->
+                          wait.reject()
+                      )
                     () ->
                       wait.reject()
                   )
-                () ->
-                  wait.reject()
-              )
+                  () ->
+                    wait.reject()
+                )
               () ->
                 wait.reject()
             )
-          () ->
-            wait.reject()
-        )
 
-        p = wait.promise
-      else
-        p = portfolio.$save()
+            p = wait.promise
+          else
+            p = portfolio.$save()
 
-      p.then(
+          p.then(
+            () ->
+              reloadPortfolios()
+            () ->
+              Flash.create('danger', "Was unable to update portfolio '#{portfolio.name}'")
+          )
         () ->
-          reloadPortfolios()
-        () ->
-          Flash.create('danger', "Was unable to update portfolio '#{portfolio.name}'")
+          Flash.create('danger', "Was unable to update campaigns for portfolio '#{portfolio.name}'")
       )
-
-    $scope.removeAccount = (portfolio, account) ->
-      PortfolioAccount.remove(portfolio.name, account).then(
-        () ->
-          reloadAccounts(portfolio)
-        () ->
-          Flash.create('danger', "Was unable to unlink account '#{account}' from portfolio #{portfolio.name}")
-      )
-
-    $scope.stageCampaignRemoval = (portfolio, campaign) ->
-      portfolio.campaigns = _.without(portfolio.campaigns, campaign)
-
-    $scope.stageCampaign = (portfolio) ->
-      if portfolio.capmaignToAdd?
-        portfolio.campaigns.push(portfolio.capmaignToAdd)
-      portfolio.capmaignToAdd = null
 
 
     $scope.savePortfolio = () ->
-      new Portfolio($scope.portfolioUnderConstruction).$save(() ->
-        $q.all(
-          _.map(
-            _.each(
-              $scope.portfolioUnderConstruction.accounts,
-              (a) ->
-                PortfolioAccount.save($scope.portfolioUnderConstruction.name, a)
-            )
-          )
-        ).then(
+      p = $scope.portfolioUnderConstruction
+      new Portfolio(p).$save(() ->
+        PortfolioCampaign.save(p.name, p.campaignsToAdd).then(
           () ->
             reloadPortfolios()
             $scope.portfolioUnderConstruction = emptyPortfolio()
