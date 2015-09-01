@@ -20,10 +20,13 @@ angular.module('thesoupApp').factory(
           if campaignIds.length is 1
             $http.post "#{api}/portfolio/#{portfolioName}/campaigns/#{campaignIds[0]}"
           else
-            $http.post  "#{api}/portfolio/#{portfolioName}/campaigns", campaignIds
+            $http.post  "#{api}/portfolio/#{portfolioName}/campaigns", (campaigns: campaignIds, action: 'add')
 
-        remove: (portfolioName, campaignId) ->
-          $http.delete "#{api}/portfolio/#{portfolioName}/campaigns/#{campaignId}"
+        remove: (portfolioName, campaignIds) ->
+          if campaignIds.length is 1
+            $http.delete "#{api}/portfolio/#{portfolioName}/campaigns/#{campaignIds[0]}"
+          else
+            $http.post  "#{api}/portfolio/#{portfolioName}/campaigns", (campaigns: campaignIds, action: 'delete')
       )
   ]
 )

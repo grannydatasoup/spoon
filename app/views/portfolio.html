@@ -15,13 +15,13 @@
         <div class="form-group">
           <label>Campaigns</label>
           <div class="row table-wrapper">
-            <table class="table ng-table-responsive" ng-table="tableParams" show-filter='true'>
+            <table class="table ng-table-responsive" ng-table="portfolio.tableParams" show-filter='true'>
               <tr ng-repeat="campaign in $data">
                 <td data-title="'Id'">{{campaign.id}}</td>
                 <td data-title="'Name'" filter="{ 'name': 'text' }">{{campaign.name}}</td>
                 <td data-title="'Account'"
                   filter="{ 'account_id' : 'select' }"
-                  filter-data="accounts"
+                  filter-data="accounts()"
                 >{{campaign.account.name}}</td>
                 <td data-title="'Status'"
                   filter="{ 'status': 'select' }"
@@ -56,29 +56,21 @@
       </div>
       <div class="form-group">
         <label>Campaigns</label>
-        <p ng-repeat="campaign in portfolioUnderConstruction.campaigns">
-          {{ campaign | campaignName }}
-
-          <button type="button" class="btn btn-default btn-sm" ng-click="stageCampaignRemoval(portfolioUnderConstruction, campaign)">
-            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
-          </button>
-        </p>
         <div class="row table-wrapper">
-          <table class="table">
-            <tr>
-              <th>Id</th>
-              <th>Name</th>
-              <th>Account</th>
-              <th>Status</th>
-              <th>DataSoup managed?</th>
-            </tr>
-            <tr ng-repeat="campaign in campaigns">
-              <td>{{campaign.id}}</td>
-              <td>{{campaign.name}}</td>
-              <td>{{campaign.account.name}} ({{campaign.account.id}})</td>
-              <td>{{campaign.status}}</td>
-              <td>
-                <input type="checkbox" ng-model="campaign.managed"/>
+          <table class="table ng-table-responsive" ng-table="portfolioUnderConstruction.tableParams" show-filter='true'>
+            <tr ng-repeat="campaign in $data">
+              <td data-title="'Id'">{{campaign.id}}</td>
+              <td data-title="'Name'" filter="{ 'name': 'text' }">{{campaign.name}}</td>
+              <td data-title="'Account'"
+                filter="{ 'account_id' : 'select' }"
+                filter-data="accounts()"
+              >{{campaign.account.name}}</td>
+              <td data-title="'Status'"
+                filter="{ 'status': 'select' }"
+                filter-data="statuses"
+              >{{campaign.status}}</td>
+              <td header="'ng-table/headers/checkbox.html'">
+                <input type="checkbox" ng-model="portfolioUnderConstruction.campaigns[campaign.id]"/>
               </td>
             </tr>
           </table>

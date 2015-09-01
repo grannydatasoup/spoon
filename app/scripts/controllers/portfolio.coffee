@@ -6,10 +6,11 @@ angular.module 'thesoupApp'
       name: "Default portfolio",
       settings: (
         RPA: 100,
-        MaxBid: 10,
-        Campaigns: []
+        MaxBid: 10
       ),
-      accounts: []
+      campaigns: {},
+      tableParams: tableParams()
+
 
     $scope.accountsError = false
     $scope.statuses = [
@@ -22,22 +23,33 @@ angular.module 'thesoupApp'
     Portfolio = $resource("#{Config.api}/portfolio/:portfolioName", portfolioName: '@name')
 
     reloadPortfolios = () ->
-      $scope.portfolios = Portfolio.query()
-      $scope.portfolios.$promise.then(
+      _portfolios = Portfolio.query()
+      _portfolios.$promise.then(
         () ->
+          _.each(_portfolios, (p) -> p.tableParams = tableParams())
+          $scope.portfolios = _portfolios
           reloadCampaigns()
         () ->
           Flash.create('danger', 'Was unable to load portfolio, try again later')
       )
+
+    campaigns_diff = (portfolio) ->
+      new_campaigns = _.map(_.filter(_.pairs(portfolio.campaigns), (c) -> c[1] is true), (c) -> c[0])
+      old_campaigns = portfolio?.original_campaigns ? []
+
+      (add: _.difference(new_campaigns, old_campaigns), remove: _.difference(old_campaigns, new_campaigns))
+
+
 
     reloadCampaigns = (portfolio) ->
       if portfolio?
         PortfolioCampaign.query(portfolio.name).then(
           (campaigns) ->
             portfolio.campaigns = _.object(
-              _.map(campaigns, (c) -> c.id),
-              _.map(campaigns, true)
+              _.map(campaigns, (c) -> c.campaignId),
+              _.map(campaigns, () -> true)
             )
+            portfolio.original_campaigns = _.map(campaigns, (c) -> c.campaignId)
           () ->
             Flash.create('danger', "Was unable to load campaigns linked to portfolio '#{portfolio.name}'")
         )
@@ -51,32 +63,43 @@ angular.module 'thesoupApp'
 
     campaings_promise = User.campaigns()
 
-    $scope.tableParams = new ngTableParams({
-        filter: {
-          status: "ENABLED"
-        },
-        page: 1,
-        count: 100
-      }, {
-      getData: ($defer, params) ->
-        campaings_promise.then(
-          (c) ->
-            orderedData = $filter('filter')(c, params.filter()) if params.filter()
-            orderedData = c unless params.filter();
+    tableParams = () ->
+      new ngTableParams({
+          filter: {
+            status: "ENABLED"
+          },
+          page: 1,
+          count: 100
+        }, {
+        getData: ($defer, params) ->
+          campaings_promise.then(
+            (c) ->
+              orderedData = $filter('filter')(c, params.filter()) if params.filter()
+              orderedData = c unless params.filter();
 
-            $defer.resolve orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count())
-            params.total(orderedData.length);
-          () ->
-            $defer.reject()
-        )
+              $defer.resolve orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count())
+              params.total(orderedData.length);
+            () ->
+              $defer.reject()
+          )
 
-        $defer.promise
-    })
+          $defer.promise
+      })
 
-    $scope.accounts = $q.defer()
+    _accounts = $q.defer()
+
+    $scope.accounts = () ->
+      a = $q.defer()
+      _accounts.promise.then(
+        (ac) ->
+          a.resolve angular.copy(ac)
+        () ->
+          a.reject()
+      )
+
+      a
 
     $scope.init = () ->
-      $scope.portfolios = Portfolio.query()
 
       campaings_promise.then(
         (c) ->
@@ -91,15 +114,12 @@ angular.module 'thesoupApp'
             if _.indexOf(accounts, a) is -1
               accounts.push(a)
           )
-          $scope.accounts.resolve accounts
+          _accounts.resolve accounts
+
+          reloadPortfolios()
 
         () ->
           Flash.create('danger', 'Was unable to load campaigns')
-      )
-
-      $q.all((campaigns: campaings_promise, portfolios: $scope.portfolios.$promise)).then(
-        () ->
-          reloadCampaigns()
       )
 
       $scope.portfolioUnderConstruction = emptyPortfolio()
@@ -114,17 +134,39 @@ angular.module 'thesoupApp'
 
     $scope.updatePortfolio = (portfolio) ->
 
-      campaignsUpdate = $q.defer()
+      diff = campaigns_diff(portfolio)
+      $log.debug("Diff is")
+      $log.debug(diff)
 
-      if portfolio.campaignsToRemove? and portfolio.campaignsToRemove.length > 0
-        PortfolioCampaign.remove(portfolio.name, portfolio.campaignsToRemove).then(
+      campaignsToRemove = diff.remove
+      campaignsToAdd = diff.add
+
+      remove = $q.defer()
+      add = $q.defer()
+      campaignsUpdate = $q.all([add, remove])
+
+      if campaignsToRemove? and campaignsToRemove.length > 0
+
+        PortfolioCampaign.remove(portfolio.name, campaignsToRemove).then(
           () ->
-            campaignsUpdate.resolve()
+            remove.resolve()
           () ->
-            campaignsUpdate.reject()
+            remove.reject()
         )
       else
-        campaignsUpdate.resolve()
+        remove.resolve()
+
+      if campaignsToAdd? and campaignsToAdd.length > 0
+
+        PortfolioCampaign.save(portfolio.name, campaignsToAdd).then(
+          () ->
+            add.resolve()
+          () ->
+            add.reject()
+        )
+      else
+        add.resolve()
+
 
       campaignsUpdate.then(
         () ->
@@ -171,8 +213,9 @@ angular.module 'thesoupApp'
 
     $scope.savePortfolio = () ->
       p = $scope.portfolioUnderConstruction
+      campaignsToAdd = campaigns_diff(p).add
       new Portfolio(p).$save(() ->
-        PortfolioCampaign.save(p.name, p.campaignsToAdd).then(
+        PortfolioCampaign.save(p.name, campaignsToAdd).then(
           () ->
             reloadPortfolios()
             $scope.portfolioUnderConstruction = emptyPortfolio()
