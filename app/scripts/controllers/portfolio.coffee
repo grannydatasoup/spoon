@@ -9,7 +9,7 @@ angular.module 'thesoupApp'
         MaxBid: 10
       ),
       campaigns: {},
-      tableParams: tableParams()
+      tableParams: tableParams(this)
 
 
     $scope.accountsError = false
@@ -20,13 +20,19 @@ angular.module 'thesoupApp'
       (id: "REMOVED", title: "REMOVED")
     ]
 
+    $scope.managed_statuses = [
+      (id: true, title: "Manged"),
+      (id: false, title: "Not manged"),
+      (id: null, title: ' - ')
+    ]
+
     Portfolio = $resource("#{Config.api}/portfolio/:portfolioName", portfolioName: '@name')
 
     reloadPortfolios = () ->
       _portfolios = Portfolio.query()
       _portfolios.$promise.then(
         () ->
-          _.each(_portfolios, (p) -> p.tableParams = tableParams())
+          _.each(_portfolios, (p) -> p.tableParams = tableParams(p))
           $scope.portfolios = _portfolios
           reloadCampaigns()
         () ->
@@ -61,9 +67,11 @@ angular.module 'thesoupApp'
           )
 
 
+    accounts_promise = User.accounts()
+
     campaings_promise = User.campaigns()
 
-    tableParams = () ->
+    tableParams = (portfolio) ->
       new ngTableParams({
           filter: {
             status: "ENABLED"
@@ -76,6 +84,15 @@ angular.module 'thesoupApp'
             (c) ->
               orderedData = $filter('filter')(c, params.filter()) if params.filter()
               orderedData = c unless params.filter();
+
+              if portfolio?.campaigns?
+                _.each(orderedData, (campaign) ->
+                  campaign.managed = portfolio.campaigns[campaign.id]
+                )
+              else
+                _.each(orderedData, (campaign) ->
+                  campaign.managed = false
+                )
 
               $defer.resolve orderedData.slice((params.page() - 1) * params.count(), params.page() * params.count())
               params.total(orderedData.length);
@@ -109,10 +126,12 @@ angular.module 'thesoupApp'
             ccc
           )
           accounts = []
+          account_ids = []
           _.each($scope.campaigns, (c) ->
             a = (id: c.account.id, title: c.account.name)
-            if _.indexOf(accounts, a) is -1
+            if _.indexOf(account_ids, a.id) is -1
               accounts.push(a)
+              account_ids.push(a.id)
           )
           _accounts.resolve accounts
 

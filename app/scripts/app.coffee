@@ -1,13 +1,23 @@
 'use strict'
 
-###*
- # @ngdoc overview
- # @name thesoupApp
- # @description
- # # thesoupApp
- #
- # Main module of the application.
-###
+angular.module('underscore', [])
+  .factory('_', ['$window', ($window) ->
+    $window._
+  ])
+
+angular.module('google', [])
+  .factory('charts', ['$q', ($q) ->
+    google.load('visualization', '1.0', {
+      'packages': ['corechart'],
+      'callback': () ->
+        ret.resolve(google.visualization)
+    });
+
+    ret = $q.defer()
+    ret.promise
+  ])
+
+
 angular
   .module 'thesoupApp', [
     'ngRoute',
@@ -19,9 +29,11 @@ angular
     'xeditable',
     'angular-loading-bar',
     'flash',
-    'ngTable'
+    'ngTable',
+    'underscore',
+    'google'
   ]
-  .config ($routeProvider) ->
+  .config ($routeProvider, $httpProvider) ->
     $routeProvider
       .when '/',
         templateUrl: 'views/main.html',
@@ -32,8 +44,20 @@ angular
       .when '/portfolio',
         templateUrl: 'views/portfolio.html',
         controller: 'PortfolioCtrl'
+      .when '/status',
+        templateUrl: 'views/status.html'
+      .when '/performance',
+        templateUrl: 'views/performance.html'
       .otherwise
         redirectTo: '/'
+
+    $httpProvider.interceptors.push ($location) ->
+      response: (r) ->
+        if r.status==202
+          $location.url('/status')
+        r
+
+
   .run (editableOptions, editableThemes) ->
     editableOptions.theme = 'bs3'
     editableThemes.bs3.buttonsClass = 'btn-sm';

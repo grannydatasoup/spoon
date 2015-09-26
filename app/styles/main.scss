@@ -21,6 +21,10 @@ body {
   }
 }
 
+.container.wide {
+  max-width: 100%;
+}
+
 /* Everything but the jumbotron gets side spacing for mobile first views */
 .header,
 .marketing,
@@ -118,4 +122,9 @@ p {
   top: 5px;
   width: 80%;
   left: 10%;
+}
+
+.chart-header {
+  overflow: hidden;
+  white-space: nowrap;
 }
