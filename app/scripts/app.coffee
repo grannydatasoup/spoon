@@ -25,7 +25,7 @@ angular
     'ngResource',
     'ui.tree',
     'ui.bootstrap',
-    'ui.select2',
+    'ui.select',
     'xeditable',
     'angular-loading-bar',
     'flash',

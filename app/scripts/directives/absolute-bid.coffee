@@ -27,13 +27,17 @@ angular.module('thesoupApp').directive('absoluteBidChart',
             title: 'Bid count'
           )
         )
-
-        Stat.portfolio_actual($scope.portfolio_id).then(
-          (histogram) ->
-            element.empty()
-            material = new charts.LineChart(element.get()[0]);
-            dt.addRows(_.map(histogram, (bin) -> [bin.CpcBid, bin.Count]))
-            material.draw(dt, options);
+        $scope.$watch(
+            () -> $scope.portfolio_id
+            () ->
+                if $scope.portfolio_id?
+                  Stat.portfolio_actual($scope.portfolio_id).then(
+                    (histogram) ->
+                      element.empty()
+                      material = new charts.LineChart(element.get()[0]);
+                      dt.addRows(_.map(histogram, (bin) -> [bin.CpcBid, bin.Count]))
+                      material.draw(dt, options);
+                  )
         )
       )
 ])

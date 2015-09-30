@@ -29,12 +29,17 @@ angular.module('thesoupApp').directive('absoluteBidDiffChart',
           )
         )
 
-        Stat.portfolio_actual_diff($scope.portfolio_id).then(
-          (histogram) ->
-            element.empty()
-            material = new charts.ColumnChart(element.get()[0]);
-            dt.addRows(_.map(histogram, (bin) -> [bin.BidChange, bin.Count]))
-            material.draw(dt, options);
+        $scope.$watch(
+            () -> $scope.portfolio_id
+            () ->
+                if $scope.portfolio_id?
+                    Stat.portfolio_actual_diff($scope.portfolio_id).then(
+                      (histogram) ->
+                        element.empty()
+                        material = new charts.ColumnChart(element.get()[0]);
+                        dt.addRows(_.map(histogram, (bin) -> [bin.BidChange, bin.Count]))
+                        material.draw(dt, options);
+                    )
         )
       )
 ])

@@ -1,25 +1,39 @@
-<div class="col-md-1"></div>
-<div class="col-md-10">
-  <div class="row">
-    <div class="col-md-4 chart-wrapper">
-      <h4 class="chart-header">Bid difference. Today with yesterday</h4>
-      <div class="absolute-chart-wrapper" absolute-bid-diff-chart portfolio_id="'3'">
-        <p class="text-muted">Loading...</p>
-      </div>
-    </div>
-    <div class="col-md-4 chart-wrapper">
-      <h4 class="chart-header">Bid distribution</h4>
-      <div class="absolute-chart-wrapper" absolute-bid-chart portfolio_id="'3'">
-        <p class="text-muted">Loading...</p>
-      </div>
-    </div>
-    <div class="col-md-4 chart-wrapper">
-      <h4 class="chart-header">Bid difference. Scheduled with actual</h4>
-      <div class="absolute-chart-wrapper" scheduled-bid-diff-chart portfolio_id="'3'">
-        <p class="text-muted">Loading...</p>
-      </div>
-    </div>
+<div ng-controller="PerformanceCtrl">
+    <div class="col-md-1"></div>
+    <div class="col-md-10">
+      <div class="row">
+          <ui-select ng-model="portfolio.selected" theme="bootstrap">
+          <ui-select-match placeholder="Chose portfolio...">{{$select.selected.name}}</ui-select-match>
+          <ui-select-choices repeat="portfolio in portfolios">
+          <div ng-bind-html="portfolio.name | highlight: $select.search"></div>
+        </ui-select-choices>
+      </ui-select>
 
-  </div>
+      </div>
+      <div class="row" ng-show="portfolio.selected">
+        <div class="col-md-4 chart-wrapper">
+          <h4 class="chart-header">Bid difference. Today with yesterday</h4>
+          <div class="absolute-chart-wrapper" absolute-bid-diff-chart portfolio_id="portfolio.selected.id">
+            <p class="text-muted">Loading...</p>
+          </div>
+        </div>
+        <div class="col-md-4 chart-wrapper">
+          <h4 class="chart-header">Bid distribution</h4>
+          <div class="absolute-chart-wrapper" absolute-bid-chart portfolio_id="portfolio.selected.id">
+            <p class="text-muted">Loading...</p>
+          </div>
+        </div>
+        <div class="col-md-4 chart-wrapper">
+          <h4 class="chart-header">Bid difference. Scheduled with actual</h4>
+          <div class="absolute-chart-wrapper" scheduled-bid-diff-chart portfolio_id="portfolio.selected.id">
+            <p class="text-muted">Loading...</p>
+          </div>
+        </div>
+
+      </div>
+      <div class="row" ng-hide="portfolio.selected">
+          <p class="text-muted">Select a portfolio in a dropdown to see its stats</p>
+      </div>
+    </div>
+    <div class="col-md-1"></div>
 </div>
-<div class="col-md-1"></div>
